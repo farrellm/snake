@@ -1,0 +1,56 @@
+name:                snake
+version:             0.1.0.0
+github:              "farrellm/snake"
+license:             BSD3
+author:              "Matthew Farrell"
+maintainer:          "farrellm@alum.mit.edu"
+copyright:           "2019 Matthew Farrell"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/farrellm/snake#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- containers
+- lens
+- linear
+- protolude
+- scad
+- text
+- vector
+
+library:
+  source-dirs: src
+
+executables:
+  snake-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O2
+    dependencies:
+    - snake
+
+tests:
+  snake-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - snake
