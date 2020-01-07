@@ -160,67 +160,20 @@ findFlat = let o = V2 0 0 in go (S.singleton o) [] o
       nxt <- [V2 0 1]
       go (S.insert nxt past) (cur : path) nxt ks
 
-eps :: Double
-eps = 1e-3
+data Snake
+  = Snake
+      { epsilon :: Double,
+        tolerance :: Double,
+        width :: Double,
+        height :: Double
+      }
 
-tol :: Double
-tol = 0.2
+block :: Snake -> Form'
+block Snake {width = w, tolerance = tol} = cube (w - 2 * tol)
 
-block :: Double -> Form'
-block w = cube (w - 2 * tol)
-
-pivot' :: Double -> Form'
-pivot' w =
-  let h = 0.1 * w
-      r = 0.4 * w
-   in -- rotate'
-      --  (V3 (pi / 2) 0 0)
-      ( ( translate
-            (V3 0 0 (- (w / 2 - h) + eps))
-            ( cylinder2'
-                (h - tol + 2 * eps)
-                (r - h - tol - eps, r - 2 * tol + eps)
-            )
-            <#> ( translate
-                    ( V3
-                        0
-                        (- r + h + tol + w * (1 + 1 / sqrt 2))
-                        (- (w / 2 - h) + w * (1 - 1 / sqrt 2))
-                    )
-                    . rotate' (V3 (- pi / 4) 0 0)
-                    . rotate' (V3 0 (pi / 4) 0)
-                    $ cube (2 * w)
-                )
-          -- (translate (V3 0 (-r + h + tol + w / sqrt 2) (-(w / 2 - h) - w / sqrt 2)) .
-          --  rotate' (V3 (pi/4) 0 0) $
-          --  cube (2 * w))
-          -- (translate (V3 0 0 (-w / 2 + h)) .
-          --  rotate' (V3 (-pi / 4) 0 0) . scale (V3 1 (1 / sqrt 2) 1) $
-          --  cylinder w (r - h - tol))
-        )
-          <+> translate
-            (V3 0 0 (- (w / 2) - eps - tol))
-            (cylinder2' (h + 2 * eps + tol) (r + eps, r - h - eps - tol))
-          <+> hidden
-            ( block w
-                <-> translate
-                  (V3 0 0 (- (w / 2 - h) - eps))
-                  ( cylinder2'
-                      (h + tol + eps)
-                      (r - h + tol - eps, r + 2 * tol)
-                  )
-                <-> translate
-                  (V3 0 0 (- (w / 2) - eps))
-                  ( cylinder2'
-                      (h + 2 * eps)
-                      (r + tol + eps, r - h + tol - eps)
-                  )
-            )
-      )
-
-pivot :: Double -> Form'
-pivot w =
-  let h = 0.3 * w
+pivot :: Snake -> Form'
+pivot s@Snake {width = w, tolerance = tol, epsilon = eps} =
+  let h = height s * w
       r = 0.45 * w
    in rotate'
         (V3 (pi / 2) 0 0)
@@ -242,7 +195,7 @@ pivot w =
                       $ cube (2 * w)
                   )
           )
-            <+> ( block w
+            <+> ( block s
                     <-> translate
                       (V3 0 0 (- (w / 2 - tol) - eps))
                       ( cylinder w r
@@ -251,23 +204,56 @@ pivot w =
                 )
         )
 
-hinge :: Double -> Form'
-hinge w = _
+-- hinge :: Snake -> Form'
+-- hinge s = _
 
-snake :: Form'
-snake =
+snake :: Snake -> Form'
+snake s =
   -- block 10
-  fn 200 (translate (V3 0 10 0) (block 10) <+> pivot 10)
-    <#> translate (V3 25 0 0) (cube 50)
+  fn
+    50
+    $ union
+      [ translate (V3 0 0 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 1))
+            <+> pivot s {height = 0.2},
+        translate (V3 15 0 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 2))
+            <+> pivot s {height = 0.25},
+        translate (V3 30 0 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 3))
+            <+> pivot s {height = 0.3},
+        translate (V3 45 0 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 4))
+            <+> pivot s {height = 0.35},
+        translate (V3 0 (-25) 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 1))
+            <+> pivot s {height = 0.2, tolerance = 0.2},
+        translate (V3 15 (-25) 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 2))
+            <+> pivot s {height = 0.25, tolerance = 0.2},
+        translate (V3 30 (-25) 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 3))
+            <+> pivot s {height = 0.3, tolerance = 0.2},
+        translate (V3 45 (-25) 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 4))
+            <+> pivot s {height = 0.35, tolerance = 0.2}
+      ]
+
+-- <#> translate (V3 25 0 0) (cube 50)
 
 someFunc :: IO ()
 someFunc = do
+  let s = Snake
+        { epsilon = 1e-3,
+          tolerance = 0.15,
+          width = 10,
+          height = 0.3
+        }
   putTxtLn "snake"
   putTxtLn ""
   let (path : _) = findFlat myBlocks
   print path
   putTxtLn ""
-  printScad snake
+  printScad (snake s)
   putTxtLn ""
-  writeScad "snake.scad" snake
-  putErrText ("Helloworld")
+  writeScad "snake.scad" (snake s)
