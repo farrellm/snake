@@ -165,16 +165,18 @@ data Snake
       { epsilon :: Double,
         tolerance :: Double,
         width :: Double,
-        height :: Double
+        height :: Double,
+        radius :: Double
       }
 
 block :: Snake -> Form'
-block Snake {width = w, tolerance = tol} = cube (w - 2 * tol)
+block Snake {width = w, tolerance = tol} =
+  cube (w - 2 * tol) <#> sphere (0.7 * (w - 2 * tol))
 
 pivot :: Snake -> Form'
 pivot s@Snake {width = w, tolerance = tol, epsilon = eps} =
   let h = height s * w
-      r = 0.45 * w
+      r = radius s * w
    in rotate'
         (V3 (pi / 2) 0 0)
         ( ( ( translate
@@ -215,31 +217,31 @@ snake s =
     $ union
       [ translate (V3 0 0 0) $
           translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 1))
-            <+> pivot s {height = 0.2},
+            <+> pivot s {height = 0.25},
         translate (V3 15 0 0) $
           translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 2))
-            <+> pivot s {height = 0.25},
+            <+> pivot s {height = 0.3},
         translate (V3 30 0 0) $
           translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 3))
-            <+> pivot s {height = 0.3},
+            <+> pivot s {height = 0.25, radius = 0.4},
         translate (V3 45 0 0) $
           translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 4))
-            <+> pivot s {height = 0.35},
+            <+> pivot s {height = 0.3, radius = 0.4},
         translate (V3 0 (-25) 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 1))
-            <+> pivot s {height = 0.2, tolerance = 0.2},
-        translate (V3 15 (-25) 0) $
           translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 2))
-            <+> pivot s {height = 0.25, tolerance = 0.2},
-        translate (V3 30 (-25) 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 3))
-            <+> pivot s {height = 0.3, tolerance = 0.2},
-        translate (V3 45 (-25) 0) $
+            <+> pivot s {height = 0.25, tolerance = 0.25},
+        translate (V3 15 (-25) 0) $
           translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 4))
-            <+> pivot s {height = 0.35, tolerance = 0.2}
+            <+> pivot s {height = 0.3, tolerance = 0.25},
+        translate (V3 30 (-25) 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 6))
+            <+> pivot s {height = 0.25, radius = 0.4, tolerance = 0.25},
+        translate (V3 45 (-25) 0) $
+          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 8))
+            <+> pivot s {height = 0.3, radius = 0.4, tolerance = 0.25}
       ]
 
--- <#> translate (V3 25 0 0) (cube 50)
+-- <#> translate (V3 (25 + 45) 0 0) (cube 50)
 
 someFunc :: IO ()
 someFunc = do
@@ -247,7 +249,8 @@ someFunc = do
         { epsilon = 1e-3,
           tolerance = 0.15,
           width = 10,
-          height = 0.3
+          height = 0.25,
+          radius = 0.45
         }
   putTxtLn "snake"
   putTxtLn ""
