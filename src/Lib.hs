@@ -206,51 +206,62 @@ pivot s@Snake {width = w, tolerance = tol, epsilon = eps} =
                 )
         )
 
--- hinge :: Snake -> Form'
--- hinge s = _
+hinge :: Snake -> Form'
+hinge s@Snake {tolerance = tol, epsilon = eps, width = w} =
+  let rc = w / 5
+      c = rotate' (V3 0 (pi / 2) 0) $ cylinder (w / 3 - 2 * tol) rc
+   in ( block s
+          <#> ( translate (V3 0 (- w / 2) 0) (box (V3 (2 * w) w (2 * w)))
+                  <+> translate (V3 0 0 (- w / 2)) (box (V3 (2 * w) (2 * w) w))
+                  <+> rotate' (V3 0 (pi / 2) 0) (cylinder (2 * w) (w / 2 - tol))
+              )
+          <-> ( translate (V3 0 (w / 2) (w / 2))
+                  . rotate' (V3 0 (pi / 2) 0)
+                  $ cylinder (w / 3 + 2 * tol) (1.06 * w - tol)
+              )
+          <-> ( translate (V3 (w / 6 + rc / 2 + tol - eps) 0 0)
+                  . rotate' (V3 0 (pi / 2) 0)
+                  $ cylinder2 (rc + tol) (rc + tol, 0)
+              )
+          <-> ( translate (V3 (- w / 6 - rc / 2 - tol + eps) 0 0)
+                  . rotate' (V3 0 (- pi / 2) 0)
+                  $ cylinder2 (rc + tol) (rc + tol, 0)
+              )
+      )
+        <+> hull
+          [ c,
+            translate (V3 0 (w / 2 - rc - tol) (w / 2 - rc - tol)) c,
+            translate (V3 0 (w / 2 - rc - tol) (- w / 2 + rc + tol)) c,
+            translate (V3 0 (w - rc - tol) (w / 2 - rc - tol)) c,
+            translate (V3 0 (w - rc - tol) (- w / 2 + rc + tol)) c
+          ]
+        <+> ( translate (V3 (w / 6 + rc / 2 - tol - eps) 0 0)
+                . rotate' (V3 0 (pi / 2) 0)
+                $ cylinder2 rc (rc, 0)
+            )
+        <+> ( translate (V3 (- w / 6 - rc / 2 + tol + eps) 0 0)
+                . rotate' (V3 0 (- pi / 2) 0)
+                $ cylinder2 rc (rc, 0)
+            )
 
 snake :: Snake -> Form'
 snake s =
   -- block 10
   fn
     50
-    $ union
-      [ translate (V3 0 0 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 1))
-            <+> pivot s {height = 0.25},
-        translate (V3 15 0 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 2))
-            <+> pivot s {height = 0.3},
-        translate (V3 30 0 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 3))
-            <+> pivot s {height = 0.25, radius = 0.4},
-        translate (V3 45 0 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (sphere 4))
-            <+> pivot s {height = 0.3, radius = 0.4},
-        translate (V3 0 (-25) 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 2))
-            <+> pivot s {height = 0.25, tolerance = 0.25},
-        translate (V3 15 (-25) 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 4))
-            <+> pivot s {height = 0.3, tolerance = 0.25},
-        translate (V3 30 (-25) 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 6))
-            <+> pivot s {height = 0.25, radius = 0.4, tolerance = 0.25},
-        translate (V3 45 (-25) 0) $
-          translate (V3 0 10 0) (block s <+> translate (V3 0 0 5) (cube 8))
-            <+> pivot s {height = 0.3, radius = 0.4, tolerance = 0.25}
-      ]
+    $ translate (V3 0 (width s) 0) (block s) <+> hinge s
 
+-- $ translate (V3 0 (width s) 0) (block s) <+> pivot s
 -- <#> translate (V3 (25 + 45) 0 0) (cube 50)
 
 someFunc :: IO ()
 someFunc = do
   let s = Snake
         { epsilon = 1e-3,
-          tolerance = 0.15,
+          tolerance = 0.25,
           width = 10,
           height = 0.25,
-          radius = 0.45
+          radius = 0.4
         }
   putTxtLn "snake"
   putTxtLn ""
