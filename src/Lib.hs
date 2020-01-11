@@ -217,9 +217,9 @@ hinge s@Snake {tolerance = tol, epsilon = eps, width = w} =
                   <+> translate (V3 0 0 (- w / 2)) (box (V3 (2 * w) (2 * w) w))
                   <+> rotate' (V3 0 (pi / 2) 0) (cylinder (2 * w) (w / 2 - tol))
               )
-          <-> ( translate (V3 0 (w / 2) (w / 2))
-                  . rotate' (V3 0 (pi / 2) 0)
-                  $ cylinder (w / 3 + 2 * tol) (1.06 * w - tol)
+          <-> ( translate (V3 0 ((w - rc - 2 * tol) / sqrt 2) ((w - rc - 2 * tol) / sqrt 2))
+                  . rotate' (V3 (pi / 4) 0 0)
+                  $ box (V3 (w / 3 + 2 * tol) (2 * w) (2 * w))
               )
           <-> ( translate (V3 (w / 6 + rc / 2 + tol - eps) 0 0)
                   . rotate' (V3 0 (pi / 2) 0)
@@ -248,7 +248,6 @@ hinge s@Snake {tolerance = tol, epsilon = eps, width = w} =
 
 snake :: Snake -> Form'
 snake s =
-  -- block 10
   fn
     50
     $ union (go Nothing $ zip myBlocks myFlat)
