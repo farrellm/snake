@@ -82,8 +82,7 @@ toBlocks' = go 0 Nothing
       | i == j =
         let v = triple (b - a) (c - b) (d - c)
             tl = go (i + 1) (Just b) js rs
-         in -- traceShow (v, b - a, c - b, d - c) $
-            if
+         in if
               | v > 0 -> BendUp : tl
               | v < 0 -> BendDown : tl
               | otherwise -> if b - c == c - d then Straight : tl else Corner : tl
@@ -138,7 +137,7 @@ findFlat = let o = V2 0 0 in go (S.singleton o) [] o
   where
     z0 (V2 x y) = V3 x y 0
     go :: Set (V2 Int) -> [V2 Int] -> V2 Int -> [Block] -> [[V2 Int]]
-    go _ path cur [] = [reverse (cur : path)]
+    go _ path _ [] = [reverse path]
     go past path@(p1 : p2 : _) cur (k : ks) | isBend k = do
       let d1 = cur - p1
           d2 = p1 - p2
@@ -159,6 +158,9 @@ findFlat = let o = V2 0 0 in go (S.singleton o) [] o
     go past path cur (_ : ks) = do
       nxt <- [V2 0 1]
       go (S.insert nxt past) (cur : path) nxt ks
+
+myFlat :: [V2 Int]
+(myFlat : _) = findFlat myBlocks
 
 data Snake
   = Snake
@@ -249,10 +251,31 @@ snake s =
   -- block 10
   fn
     50
-    $ translate (V3 0 (width s) 0) (block s) <+> hinge s
-
--- $ translate (V3 0 (width s) 0) (block s) <+> pivot s
--- <#> translate (V3 (25 + 45) 0 0) (cube 50)
+    $ union (go Nothing $ zip myBlocks myFlat)
+  where
+    go _ [] = []
+    go Nothing ((_, v@(V2 x y)) : rs) =
+      translate
+        (V3 (width s * fromIntegral x) (width s * fromIntegral y) 0)
+        (block s)
+        : go (Just v) rs
+    go (Just p) ((k, v@(V2 x y)) : rs) =
+      let d = v - p
+          t =
+            if
+              | d == V2 0 (-1) -> 0
+              | d == V2 1 0 -> tau / 4
+              | d == V2 0 1 -> tau / 2
+              | otherwise -> 3 * tau / 4
+          b = case k of
+            Corner -> pivot s
+            End -> pivot s
+            _ -> hinge s
+          m =
+            translate (V3 (width s * fromIntegral x) (width s * fromIntegral y) 0)
+              . rotate' (V3 0 0 t)
+              $ b
+       in m : go (Just v) rs
 
 someFunc :: IO ()
 someFunc = do
