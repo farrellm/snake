@@ -82,10 +82,9 @@ toBlocks' = go 0 Nothing
       | i == j =
         let v = triple (b - a) (c - b) (d - c)
             tl = go (i + 1) (Just b) js rs
-         in if
-              | v > 0 -> BendUp : tl
-              | v < 0 -> BendDown : tl
-              | otherwise -> if b - c == c - d then Straight : tl else Corner : tl
+         in if  | v > 0 -> BendUp : tl
+                | v < 0 -> BendDown : tl
+                | otherwise -> if b - c == c - d then Straight : tl else Corner : tl
     go i _ js (b : rs@(c : d : _)) =
       let tl = go (i + 1) (Just b) js rs
        in if b - c == c - d then Straight : tl else Corner : tl
@@ -249,7 +248,7 @@ hinge s@Snake {tolerance = tol, epsilon = eps, width = w} =
 snake :: Snake -> Form'
 snake s =
   fn
-    50
+    100
     $ union (go Nothing $ zip myBlocks myFlat)
   where
     go _ [] = []
@@ -261,11 +260,10 @@ snake s =
     go (Just p) ((k, v@(V2 x y)) : rs) =
       let d = v - p
           t =
-            if
-              | d == V2 0 (-1) -> 0
-              | d == V2 1 0 -> tau / 4
-              | d == V2 0 1 -> tau / 2
-              | otherwise -> 3 * tau / 4
+            if  | d == V2 0 (-1) -> 0
+                | d == V2 1 0 -> tau / 4
+                | d == V2 0 1 -> tau / 2
+                | otherwise -> 3 * tau / 4
           b = case k of
             Corner -> pivot s
             End -> pivot s
@@ -278,13 +276,14 @@ snake s =
 
 someFunc :: IO ()
 someFunc = do
-  let s = Snake
-        { epsilon = 1e-3,
-          tolerance = 0.25,
-          width = 10,
-          height = 0.25,
-          radius = 0.4
-        }
+  let s =
+        Snake
+          { epsilon = 1e-3,
+            tolerance = 0.25,
+            width = 15,
+            height = 0.25,
+            radius = 0.4
+          }
   putTxtLn "snake"
   putTxtLn ""
   let (path : _) = findFlat myBlocks
